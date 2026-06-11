@@ -1,42 +1,45 @@
-const guitars = [
-  { id: 1, make: "Fender", model: "Stratocaster" },
-  { id: 2, make: "Gibson", model: "Les Paul" },
-  { id: 3, make: "Fender", model: "GS Mini" },
-  { id: 4, make: "Ibanez", model: "RG" },
-];
+import mongoose from "mongoose";
 
-export const getAllGuitars = () => {
-  return Promise.resolve(guitars);
+const guitarSchema = new mongoose.Schema({
+  make: String,
+  model: String,
+  make_lower: String,
+});
+
+const Guitar = mongoose.model("Guitar", guitarSchema);
+
+export const getAllGuitars = async () => {
+  return await Guitar.find();
 };
 
-export const getGuitarById = (id) => {
-  return Promise.resolve(guitars.find((g) => g.id === id));
+export const getGuitarById = async (id) => {
+  return await Guitar.findById(id);
 };
 
-export const getGuitarsByMake = (make) => {
-  return Promise.resolve(guitars.filter((g) => g.make.toLowerCase() === make.toLowerCase()));
+export const getGuitarsByMake = async (make) => {
+  return await Guitar.find({ make_lower: make.toLowerCase() });
 };
 
-export const addGuitar = ({ make, model }) => {
-  const newGuitar = {
-    id: guitars.length + 1,
+export const addGuitar = async ({ make, model }) => {
+  await Guitar.create({
     make,
-    model
-  };
-  guitars.push(newGuitar);
-  return Promise.resolve(newGuitar);
-}; 
-
-export const updateGuitar = (id, { make, model }) => {
-  const guitarIndex = guitars.findIndex((g) => g.id === id);
-  
-  guitars[guitarIndex] = { ...guitars[guitarIndex], make, model };
-  return Promise.resolve(true);
+    model,
+    make_lower: make.toLowerCase(),
+  });
 };
 
-export const removeGuitar = (id) => {
-  const guitarIndex = guitars.findIndex((g) => g.id === id);
-  
-  guitars.splice(guitarIndex, 1);
-  return Promise.resolve(true );
+export const updateGuitar = async (id, { make, model }) => {
+  const guitar = await getGuitarById(id);
+
+  if (guitar) {
+    guitar.make = make;
+    guitar.model = model;
+    guitar.make_lower = make.toLowerCase();
+
+    guitar.save();
+  }
+};
+
+export const removeGuitar = async (id) => {
+  await Guitar.deleteOne({ _id: id });
 };
